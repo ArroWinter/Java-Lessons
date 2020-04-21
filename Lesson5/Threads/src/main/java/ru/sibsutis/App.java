@@ -1,107 +1,69 @@
 package ru.sibsutis;
 
-
-import java.util.ArrayDeque;
-import java.util.Queue;
-
-/*class Product {
-    private String name = "Product";
-
-    public Product() {
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-}*/
-
-class Store {
-    private Queue<Store> storage;
-
-    public Store() {
-        this.storage = new ArrayDeque<>();
-    }
-
-     Store get() {
-        while (storage.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-        Store store1 = storage.remove();
-        System.out.println("Покупатель купил товар" + "\nТоваров осталось: " + storage.size());
-        notify();
-        return store1;
-    }
-
-    synchronized void put(Store store) {
-        while (storage.size() > 100) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-        for (int i = 0; i < 10; i++) {
-            storage.add(store);
-        }
-        System.out.println("Производитель произвёл 10 товор" + "\nТоваров осталось: " + storage.size());
-        notify();
-    }
-}
-
-class Producer implements Runnable {
-    private Store store;
-
-    public Producer(Store store) {
-        this.store = store;
-    }
-
-    @Override
-    public void run() {
-        while (true) {
-            store.put(store);
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-}
-
-class Consumer implements Runnable {
-    private Store store;
-
-    public Consumer(Store store) {
-        this.store = store;
-    }
-
-    @Override
-    public void run() {
-        while (true) {
-            store.get();
-            try {
-                Thread.sleep(40);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-}
-
 public class App {
+  
     public static void main(String[] args) {
-        Store store = new Store();
-        new Thread(new Producer(store)).start();
-        for (int i = 0; i < 50; i++) {
-            new Thread(new Consumer(store)).start();
+          
+        Store store=new Store();
+        Producer producer = new Producer(store);
+        Consumer consumer = new Consumer(store);
+        new Thread(producer).start();
+        new Thread(consumer).start();
+    }
+}
+
+class Store{
+   private int product=0;
+   public synchronized void get() {
+      while (product<1) {
+         try {
+            wait();
+         }
+         catch (InterruptedException e) {
+         }
+      }
+      product--;
+      System.out.println("Покупатель купил 1 товар");
+      System.out.println("Товаров на складе: " + product);
+      notify();
+   }
+   public synchronized void put() {
+       while (product>=3) {
+         try {
+            wait();
+         }
+         catch (InterruptedException e) { 
+         } 
+      }
+      product++;
+      System.out.println("Производитель добавил 1 товар");
+      System.out.println("Товаров на складе: " + product);
+      notify();
+   }
+}
+
+class Producer implements Runnable{
+  
+    Store store;
+    Producer(Store store){
+       this.store=store; 
+    }
+    public void run(){
+        for (int i = 1; i < 6; i++) {
+            store.put();
+        }
+    }
+}
+
+class Consumer implements Runnable{
+      
+     Store store;
+    Consumer(Store store){
+       this.store=store; 
+    }
+    public void run(){
+        for (int i = 1; i < 6; i++) {
+            store.get();
         }
     }
 }
